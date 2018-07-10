@@ -128,7 +128,7 @@ class Decoder(srd.Decoder):
         self.frame_start = None
         self.frame_end = None
         self.is_nack = 0
-        self.cmdBytes = []
+        self.cmd_bytes = []
 
     def metadata(self, key, value):
         if key == srd.SRD_CONF_SAMPLERATE:
@@ -144,9 +144,9 @@ class Decoder(srd.Decoder):
 
         i = 0
         str = ""
-        while i < len(self.cmdBytes):
-            str += "{:02x}".format(self.cmdBytes[i]['val'])
-            if i != (len(self.cmdBytes) - 1):
+        while i < len(self.cmd_bytes):
+            str += "{:02x}".format(self.cmd_bytes[i]['val'])
+            if i != (len(self.cmd_bytes) - 1):
                 str += ":"
             i += 1
 
@@ -155,22 +155,22 @@ class Decoder(srd.Decoder):
         i = 0
         operands = 0
         str = ""
-        while i < len(self.cmdBytes):
+        while i < len(self.cmd_bytes):
             # Parse header
             if i == 0:
-                (src, dst) = decode_header(self.cmdBytes[i]['val'])
+                (src, dst) = decode_header(self.cmd_bytes[i]['val'])
                 str = "[" + src + "] to [" + dst + "]"
             # Parse opcode
             elif i == 1:
-                str += ": " + decode_opcode(self.cmdBytes[i]['val'])
+                str += ": " + decode_opcode(self.cmd_bytes[i]['val'])
             # Parse operands
             else:
                 if operands == 0:
                     str+= ", OPERANDS=["
 
                 operands +=1
-                str += hex(self.cmdBytes[i]['val'])
-                if i == len(self.cmdBytes) - 1:
+                str += hex(self.cmd_bytes[i]['val'])
+                if i == len(self.cmd_bytes) - 1:
                     str += "]"
                 else:
                     str += ","
@@ -262,7 +262,7 @@ class Decoder(srd.Decoder):
                 self.byte = 0
 
                 # If 1st byte of the datagram, mark it as first
-                if len(self.cmdBytes) == 0:
+                if len(self.cmd_bytes) == 0:
                     self.frame_start = self.fall_start
 
             self.byte += (bit << (7 - self.bit_count))
@@ -274,7 +274,7 @@ class Decoder(srd.Decoder):
                 self.byte_count += 1
                 self.set_stat(Stat.WAIT_EOM)
                 self.put(self.byte_start, self.samplenum, self.out_ann, [6, ["0x{:02x}".format(self.byte)]])
-                self.cmdBytes.append({'st': self.byte_start, 'ed': self.samplenum, 'val': self.byte})
+                self.cmd_bytes.append({'st': self.byte_start, 'ed': self.samplenum, 'val': self.byte})
 
         # STATE: WAIT EOM
         elif self.stat == Stat.WAIT_EOM:
@@ -292,7 +292,7 @@ class Decoder(srd.Decoder):
         elif self.stat == Stat.WAIT_ACK:
             # If a frame with broadcast destination is being sent, the ACK is inverted: A 0 is considered a NACK,
             # therefore we invert the value of the bit here, so we match the real meaning of it
-            if (self.cmdBytes[0]['val'] & 0x0F) == 0x0F:
+            if (self.cmd_bytes[0]['val'] & 0x0F) == 0x0F:
                 bit = ~bit & 0x01
 
             if (self.fall_end - self.fall_start) > self.max_ack_len_samples:
