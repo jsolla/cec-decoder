@@ -18,7 +18,7 @@
 ##
 
 '''
-Consumer Electronics Control (CEC) protocol allows users to command and 
+Consumer Electronics Control (CEC) protocol allows users to command and
 control devices connected through HDMI'
 '''
 

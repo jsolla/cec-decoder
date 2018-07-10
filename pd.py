@@ -20,13 +20,16 @@
 import sigrokdecode as srd
 from .protocoldata import *
 
+
 # Pulse types
 class Pulse:
     INVALID, START, ZERO, ONE = range(4)
 
+
 # Protocol stats
 class Stat:
     WAIT_START, GET_BITS, WAIT_EOM, WAIT_ACK = range(4)
+
 
 # Pulse times in milliseconds
 timing = {
@@ -65,15 +68,19 @@ timing = {
         }
     }
 
+
 class ChannelError(Exception):
     pass
+
 
 class Decoder(srd.Decoder):
     api_version = 3
     id = 'cec'
     name = 'CEC'
     longname = 'HDMI Consumer Electronics Control protocol'
-    desc = 'Consumer Electronics Control (CEC) protocol allows users to command and control devices connected through HDMI'
+    desc = ("Consumer Electronics Control (CEC) protocol allows users "
+            "to command and control devices connected through HDMI"
+            )
     license = 'gplv2+'
     inputs = ['logic']
     outputs = ['hdmicec']
@@ -95,11 +102,11 @@ class Decoder(srd.Decoder):
     )
 
     annotation_rows = (
-        ('bits', 'Bits', (0,1,2,3,4,5)),
-        ('bytes', 'Bytes', (6,)),
-        ('frames', 'Frames', (7,)),
-        ('sections', 'Sections', (8,)),
-        ('warnings', 'Warnings', (9,))
+        ('bits', 'Bits', (0, 1, 2, 3, 4, 5)),
+        ('bytes', 'Bytes', (6, )),
+        ('frames', 'Frames', (7, )),
+        ('sections', 'Sections', (8, )),
+        ('warnings', 'Warnings', (9, ))
     )
 
     def __init__(self):
@@ -107,7 +114,7 @@ class Decoder(srd.Decoder):
 
     def precalculate(self):
         # Restrict max length of ACK/NACK labels to 3 bit pulses
-        bit_time = timing[Pulse.ZERO]['total']['min'];
+        bit_time = timing[Pulse.ZERO]['total']['min']
         bit_time = bit_time * 2
         self.max_ack_len_samples = round((bit_time / 1000) * self.samplerate)
 
@@ -139,7 +146,7 @@ class Decoder(srd.Decoder):
         self.stat = stat
 
     def handle_frame(self, is_nack):
-        if self.fall_start == None or self.fall_end == None:
+        if self.fall_start is None or self.fall_end is None:
             return
 
         i = 0
@@ -168,7 +175,7 @@ class Decoder(srd.Decoder):
                 if operands == 0:
                     str += ", OPERANDS=["
 
-                operands +=1
+                operands += 1
                 str += hex(self.cmd_bytes[i]['val'])
                 if i == len(self.cmd_bytes) - 1:
                     str += "]"
@@ -278,8 +285,8 @@ class Decoder(srd.Decoder):
 
         # STATE: WAIT EOM
         elif self.stat == Stat.WAIT_EOM:
-            self.eom = bit;
-            self.frame_end = self.fall_end;
+            self.eom = bit
+            self.frame_end = self.fall_end
 
             if self.eom:
                 self.put(self.fall_start, self.fall_end, self.out_ann, [2, ['EOM=Y']])
@@ -296,9 +303,9 @@ class Decoder(srd.Decoder):
                 bit = ~bit & 0x01
 
             if (self.fall_end - self.fall_start) > self.max_ack_len_samples:
-                ann_end = self.fall_start + self.max_ack_len_samples;
+                ann_end = self.fall_start + self.max_ack_len_samples
             else:
-                ann_end = self.fall_end;
+                ann_end = self.fall_end
 
             if bit:
                 # Any NACK detected in the frame is enough to consider the whole frame NACK'd
@@ -326,15 +333,15 @@ class Decoder(srd.Decoder):
             self.wait({0: 'f'})
 
             # Deceide if falling edge is start or end of pulse
-            if self.fall_start == None:
+            if self.fall_start is None:
                 self.fall_start = self.samplenum
             else:
                 self.fall_end = self.samplenum
                 self.process()
 
-                self.rise = None;
+                self.rise = None
                 self.fall_start = self.fall_end
-                self.fall_end = None;
+                self.fall_end = None
 
             # Wait for rising edge
             self.wait({0: 'r'})
