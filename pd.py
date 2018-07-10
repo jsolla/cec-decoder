@@ -105,6 +105,12 @@ class Decoder(srd.Decoder):
     def __init__(self):
         self.reset()
 
+    def precalculate(self):
+        # Restrict max length of ACK/NACK labels to 3 bit pulses
+        bit_time = timing[Pulse.ZERO]['total']['min'];
+        bit_time = bit_time * 2
+        self.max_ack_len_samples = round((bit_time / 1000) * self.samplerate)
+
     def reset(self):
         self.stat = Stat.WAIT_START
         self.samplerate = None
@@ -127,13 +133,13 @@ class Decoder(srd.Decoder):
     def metadata(self, key, value):
         if key == srd.SRD_CONF_SAMPLERATE:
             self.samplerate = value
+            self.precalculate()
 
     def setstat(self, stat):
         self.stat = stat
 
     def HandleFrame(self, is_nack):
         if self.fall_start == None or self.fall_end == None:
-            print("ERROR: Cannot handle datagram!!!")
             return
 
         i = 0
@@ -154,9 +160,10 @@ class Decoder(srd.Decoder):
             if i == 0:
                 (src, dst) = decode_header(self.cmdBytes[i]['val'])
                 str = "[" + src + "] to [" + dst + "]"
+            # Parse opcode
             elif i == 1:
-                #str += ": " + hex(self.cmdBytes[i]['val'])
                 str += ": " + decode_opcode(self.cmdBytes[i]['val'])
+            # Parse operands
             else:
                 if operands == 0:
                     str+= ", OPERANDS=["
@@ -167,7 +174,6 @@ class Decoder(srd.Decoder):
                     str += "]"
                 else:
                     str += ","
-
             i += 1
 
         # Header only commands are PINGS
@@ -229,7 +235,6 @@ class Decoder(srd.Decoder):
             # Set wait start so we receive next frame
             self.setstat(Stat.WAIT_START)
 
-
         # VALIDATION: Check timing of the bit (0/1) pulse in any other case (not waiting for ACK)
         if self.stat != Stat.WAIT_ACK and pulse != Pulse.START:
             if total_time < timing[pulse]['total']['min'] or total_time > timing[pulse]['total']['max']:
@@ -290,12 +295,8 @@ class Decoder(srd.Decoder):
             if (self.cmdBytes[0]['val'] & 0x0F) == 0x0F:
                 bit = ~bit & 0x01
 
-            # (PRECALCULATE THIS!!!) Restrict ACK/NACK annotation to a max of 3 bit times
-            bit_time = timing[Pulse.ZERO]['total']['min'] * 3;
-            num_samples = round((bit_time / 1000) * self.samplerate)
-
-            if (self.fall_end - self.fall_start) > num_samples:
-                ann_end = self.fall_start + num_samples;
+            if (self.fall_end - self.fall_start) > self.max_ack_len_samples:
+                ann_end = self.fall_start + self.max_ack_len_samples;
             else:
                 ann_end = self.fall_end;
 
@@ -338,5 +339,3 @@ class Decoder(srd.Decoder):
             # Wait for rising edge
             self.wait({0: 'r'})
             self.rise = self.samplenum
-
-

@@ -124,5 +124,3 @@ def decode_opcode(opcode):
         return opcodes[opcode]
     else:
         return 'Invalid'
-
-
