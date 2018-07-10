@@ -166,7 +166,7 @@ class Decoder(srd.Decoder):
             # Parse operands
             else:
                 if operands == 0:
-                    str+= ", OPERANDS=["
+                    str += ", OPERANDS=["
 
                 operands +=1
                 str += hex(self.cmd_bytes[i]['val'])
