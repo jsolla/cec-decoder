@@ -113,7 +113,7 @@ class Decoder(srd.Decoder):
         self.reset()
 
     def precalculate(self):
-        # Restrict max length of ACK/NACK labels to 3 bit pulses
+        # Restrict max length of ACK/NACK labels to 2 BIT pulses
         bit_time = timing[Pulse.ZERO]['total']['min']
         bit_time = bit_time * 2
         self.max_ack_len_samples = round((bit_time / 1000) * self.samplerate)
@@ -218,7 +218,7 @@ class Decoder(srd.Decoder):
             self.put(self.fall_start, self.fall_end, self.out_ann, [9, ['Expected START: BIT found']])
             return
 
-        # VALIDATION: If waiting for ACK or EOM, only bit pulses (0/1) are expected
+        # VALIDATION: If waiting for ACK or EOM, only BIT pulses (0/1) are expected
         if (self.stat == Stat.WAIT_ACK or self.stat == Stat.WAIT_EOM) and pulse == Pulse.START:
             self.put(self.fall_start, self.fall_end, self.out_ann, [9, ['Expected BIT: START received)']])
             self.set_stat(Stat.WAIT_START)
@@ -242,7 +242,7 @@ class Decoder(srd.Decoder):
             # Set wait start so we receive next frame
             self.set_stat(Stat.WAIT_START)
 
-        # VALIDATION: Check timing of the bit (0/1) pulse in any other case (not waiting for ACK)
+        # VALIDATION: Check timing of the BIT (0/1) pulse in any other case (not waiting for ACK)
         if self.stat != Stat.WAIT_ACK and pulse != Pulse.START:
             if total_time < timing[pulse]['total']['min'] or total_time > timing[pulse]['total']['max']:
                 self.put(self.fall_start, self.fall_end, self.out_ann, [9, ['Bit pulse exceeds total pulse timespan']])
@@ -268,7 +268,7 @@ class Decoder(srd.Decoder):
                 self.byte_start = self.fall_start
                 self.byte = 0
 
-                # If 1st byte of the datagram, mark it as first
+                # If 1st byte of the datagram save its sample num
                 if len(self.cmd_bytes) == 0:
                     self.frame_start = self.fall_start
 
