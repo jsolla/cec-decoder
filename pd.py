@@ -83,7 +83,7 @@ class Decoder(srd.Decoder):
             )
     license = 'gplv2+'
     inputs = ['logic']
-    outputs = ['hdmicec']
+    outputs = ['cec']
     channels = (
         {'id': 'CEC', 'name': 'CEC', 'desc': 'CEC bus data'},
     )
