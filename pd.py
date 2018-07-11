@@ -326,21 +326,26 @@ class Decoder(srd.Decoder):
         if not self.samplerate:
             raise SamplerateError('Cannot decode without samplerate.')
 
+        # wait for first fall edge
+        self.wait({0: 'f'})
+        self.fall_end = self.samplenum
+
         while True:
-            # Wait for falling edge
-            self.wait({0: 'f'})
-
-            # Deceide if falling edge is start or end of pulse
-            if self.fall_start is None:
-                self.fall_start = self.samplenum
-            else:
-                self.fall_end = self.samplenum
-                self.process()
-
-                self.rise = None
-                self.fall_start = self.fall_end
-                self.fall_end = None
-
-            # Wait for rising edge
             self.wait({0: 'r'})
             self.rise = self.samplenum
+
+            if self.stat == Stat.WAIT_ACK:
+                self.wait([{0: 'f'}, {'skip': self.max_ack_len_samples}])
+            else:
+                self.wait([{0: 'f'}])
+
+            self.fall_start = self.fall_end
+            self.fall_end = self.samplenum
+            self.process()
+
+            # If there was a timeout while waiting for ACK: RESYNC
+            # Note: This is an expected situation as no new falling edge will
+            # happen until next frame is transmitted.
+            if self.matched == (False, True):
+                self.wait({0: 'f'})
+                self.fall_end = self.samplenum
