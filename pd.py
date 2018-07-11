@@ -166,32 +166,30 @@ class Decoder(srd.Decoder):
             # Parse header
             if i == 0:
                 (src, dst) = decode_header(self.cmd_bytes[i]['val'])
-                str = "[" + src + "] to [" + dst + "]"
+                str = "HDR: " + src + ", " + dst
             # Parse opcode
             elif i == 1:
-                str += ": " + decode_opcode(self.cmd_bytes[i]['val'])
+                str += " | OPC: " + decode_opcode(self.cmd_bytes[i]['val'])
             # Parse operands
             else:
                 if operands == 0:
-                    str += ", OPERANDS=["
+                    str += " | OPS: "
 
                 operands += 1
-                str += hex(self.cmd_bytes[i]['val'])
-                if i == len(self.cmd_bytes) - 1:
-                    str += "]"
-                else:
-                    str += ","
+                str += "0x{:02x}".format(self.cmd_bytes[i]['val'])
+                if i != len(self.cmd_bytes) - 1:
+                    str += ", "
             i += 1
 
         # Header only commands are PINGS
         if i == 1:
-            str += ": PING"
+            str += " | OPC: PING"
 
         # Add extra information (acknowledgement of the command from the destination)
         if is_nack:
-            str += " (NACK)"
+            str += " | R: NACK"
         else:
-            str += " (ACK)"
+            str += " | R: ACK"
 
         self.put(self.frame_start, self.frame_end, self.out_ann, [8, [str]])
 
