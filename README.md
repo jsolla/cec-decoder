@@ -6,8 +6,6 @@ Consumer Electronics Control (CEC) is a feature of HDMI designed to allow users 
 CEC Bus can be found in PIN 13 of the HDMI connector
 ![HDMI PINOUT](hdmi_pinout.png)
 
-
-
 Pulseview capture: CEC Ping frames
 ![Pulseview screenshot cec_decoder](screenshot1.png)
 
