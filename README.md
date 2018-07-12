@@ -4,6 +4,7 @@ Sigrok protocol decoder for HDMI CEC (Consumer Electronics Control)
 Consumer Electronics Control (CEC) is a feature of HDMI designed to allow users to command and control devices connected through HDMI
 
 CEC Bus can be found in PIN 13 of the HDMI connector:
+
 ![Hdmi pinout](hdmi_pinout.png)
 
 ## Pulseview screenshots
@@ -126,6 +127,15 @@ cec-1: HDR: TV, Tuner_1 | OPC: REPORT_POWER_STATUS | OPS: 0x01 | R: ACK
 
 ```
 
+## Current status
+
+The CEC protocol decoder is capable of the following:
+
+* Decoding all low level parts: START, BITs, EOM, ACK / NACK
+* Resolve names of all logical addresses
+* Resolve names of all opcodes
+
+Pending:
+* Operands of the opcodes are not parsed, only printed.
 
 
-## Pending stuff
