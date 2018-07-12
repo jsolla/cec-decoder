@@ -89,7 +89,7 @@ cec-1: 30:04
 Print sections only
 
 ```
-sigrok-cli -i ./hdmidumps/samsung_ISSUE.sr -P cec:CEC=CEC -A cec=sections
+sigrok-cli -i data.sr -P cec:CEC=CEC -A cec=sections
 
 cec-1: HDR: Tuner_1, TV | OPC: IMAGE_VIEW_ON | R: ACK
 cec-1: HDR: Tuner_1, AudioSystem | OPC: PING | R: NACK
