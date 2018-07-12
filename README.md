@@ -134,6 +134,8 @@ The CEC protocol decoder is capable of the following:
 * Decoding all low level parts: START, BITs, EOM, ACK / NACK
 * Resolve names of all logical addresses
 * Resolve names of all opcodes
+* Detect (and warn) timing errors
+* Detect (and warn) misplaced bits, etc
 
 Pending:
 * Operands of the opcodes are not parsed, only printed.
