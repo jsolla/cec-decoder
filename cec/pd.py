@@ -313,7 +313,7 @@ class Decoder(srd.Decoder):
                 self.put(self.fall_start, ann_end, self.out_ann, [4, ['ACK']])
 
             # After ACK bit, wait for new datagram or continue reading current one based on EOM value
-            if self.eom:
+            if self.eom or self.is_nack:
                 self.set_stat(Stat.WAIT_START)
                 self.handle_frame(self.is_nack)
             else:
