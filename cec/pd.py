@@ -183,7 +183,10 @@ class Decoder(srd.Decoder):
 
         # Header only commands are PINGS
         if i == 1:
-            str += " | OPC: PING"
+            if self.eom:
+                str += " | OPC: PING"
+            else:
+                str += " | OPC: NONE. Aborted cmd"
 
         # Add extra information (acknowledgement of the command from the destination)
         if is_nack:
